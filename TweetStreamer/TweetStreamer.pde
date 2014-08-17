@@ -1,3 +1,9 @@
+/**
+ * TweetStreamer
+ * Author: @Bradley_Dice for @WJCTECH
+ * Outputs tweet streams from a given search term to screen and via serial.
+ */
+
 import java.util.List;
 import processing.serial.*;
 
@@ -8,8 +14,8 @@ final float headerSpacing = 1.9;
 final int tweetHeight = 96;
 final int maxMediaSize = 200;
 final String searchTerm = "@WJCTECH";
-final boolean showMedia = false;
-final boolean outputSerial = false;
+final boolean showMedia = true;
+final boolean outputSerial = true;
 
 TwitterFactory tf;
 Twitter twitter;
@@ -109,6 +115,11 @@ void draw(){
         println( "Updating..." );
         savedTime = millis();
         pullTwitter();
+    }
+    
+    while (myPort.available() > 0) {
+        char c = myPort.readChar();
+        System.out.print(c);
     }
 }
 
