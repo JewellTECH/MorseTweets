@@ -1,12 +1,15 @@
 import java.util.List;
+import processing.serial.*;
 
 final int feedSize = 20;
-int marginSize = 30;
-int headerSize = 90;
-int tweetHeight = 96;
-int maxMediaSize = 200;
-String searchTerm = "#jewellplc";
-boolean showMedia = false;
+final int marginSize = 30;
+final int headerSize = 90;
+final float headerSpacing = 1.9;
+final int tweetHeight = 96;
+final int maxMediaSize = 200;
+final String searchTerm = "@WJCTECH";
+final boolean showMedia = false;
+final boolean outputSerial = false;
 
 TwitterFactory tf;
 Twitter twitter;
@@ -20,9 +23,12 @@ PFont smallFont;
 PImage bg;
 String imageURL;
 ResponseList<Status> result;
+Serial myPort;
 
 int savedTime;
 int lastY = 50;
+long lastSpokenId = 0;
+long lastId = 0;
 final int totalTime = 60000; //only 15 requests per 15 min (1 update per min)
 
 void setup(){
@@ -39,6 +45,11 @@ void setup(){
     pullTwitter();
 
     savedTime = millis();
+    
+    if(outputSerial == true){
+        println(Serial.list());
+        myPort = new Serial(this, Serial.list()[0], 9600);
+    }
 }
 
 
@@ -52,17 +63,19 @@ void draw(){
     contentFont = loadFont("Raleway-SemiBold-18.vlw");
     smallFont = loadFont("Roboto-Medium-10.vlw");
     textFont(headerFont, headerSize);
-    text("Twitter Feed:", 10, headerSize);
+    text("Twitter Stream:", 10, headerSize);
+    text(searchTerm, 10, headerSpacing*headerSize);
     textFont(contentFont, 18);
     
     int tweetNumber = 0;
     boolean lastDrawn = false;
     
-    lastY = headerSize + marginSize;
+    lastY = (int) (headerSpacing*headerSize) + marginSize;
     for(int i = 0; i < feedItems.size(); i++){
         lastDrawn = false;
         tweetNumber = i;
         FeedItem current = feedItems.get(i);
+        outputItem(current);
         if(current.getFeedItemHeight() + lastY < height){
             current.drawFeedItem(marginSize);
             lastDrawn = true;
@@ -80,6 +93,7 @@ void draw(){
         lastDrawn = false;
         tweetNumber = i;
         FeedItem current = feedItems.get(i);
+        outputItem(current);
         if(current.getFeedItemHeight() + lastY < height){
             current.drawFeedItem(width/2 + marginSize);
             lastDrawn = true;
@@ -87,7 +101,8 @@ void draw(){
           break;
         }
     }
-
+    
+    lastSpokenId = lastId;
     int passedTime = millis() - savedTime;
 
     if (passedTime > totalTime) {
@@ -116,7 +131,11 @@ void pullTwitter(){
             }
             FeedItem fi = new FeedItem(status);
             feedItems.add(fi);
-            System.out.println(fi);
+            //System.out.println(fi);
+            if(fi.getId() > lastId){
+                lastId = fi.getId();
+                System.out.println("Latest ID: " + lastId);
+            }
         }
 
     } catch(Exception e) {
@@ -125,4 +144,11 @@ void pullTwitter(){
     }
 
     System.out.println("Finished Pulling Twitter Data");
+}
+
+void outputItem(FeedItem fi){
+    if(fi.getId() > lastSpokenId && outputSerial == true){
+        System.out.println("Outputting to serial: " + fi.toString());
+        myPort.write(fi.toString());
+    }
 }

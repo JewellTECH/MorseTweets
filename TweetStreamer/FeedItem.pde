@@ -19,10 +19,14 @@ class FeedItem {
         profilePic = loadImage(imageURL, "jpg");
         for (MediaEntity mediaEntity : status.getMediaEntities()) {
             mediaURL = mediaEntity.getMediaURL();
-            System.out.println(mediaEntity.getType() + ": " + mediaEntity.getMediaURL());
+            //System.out.println(mediaEntity.getType() + ": " + mediaEntity.getMediaURL());
             mediaPic = loadImage(mediaURL, "jpg");
             hasMedia = true;
         }           
+    }
+    
+    long getId(){
+        return id;
     }
 
     PImage getProfilePic(){
